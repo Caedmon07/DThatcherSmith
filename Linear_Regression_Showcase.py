@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 import plotly.express as px
 import plotly.graph_objects as go
 
-data = pd.read_csv("C:/Users/Caedmon/Documents/BA_DA/Coffee_export.csv")
+data = pd.read_csv("Coffee_export.csv")
 print(data.head())
 x = data["1990"].values.reshape(-1, 1)
 y = data["1995"]

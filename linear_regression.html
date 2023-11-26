@@ -87,7 +87,20 @@ from sklearn.linear_model import LinearRegression
 import plotly.express as px
 import plotly.graph_objects as go</pre></span></p>
 										<p>For the first step in this code I had to install the necessary libraries.
-											<i>pandas</i> for data manipulation, <i>numpy</i> for numerical operarions, <i>train_test_split</i> and <i>LinearRegression</i>
+											<i>pandas</i>: I used the Pandas library due to its ease of use (i.e. The read_csv function 
+											is straightforward to use, and it automatically handles various complexities associated with reading CSV files, 
+											such as different delimiters, quoting characters, and line terminators), it's flexibility (The function provides a wide range of 
+											parameters to accommodate different CSV file formats and structures. This flexibility makes it suitable for a variety of datasets.), its
+											efficiency (it is optimized for performance, making it efficient even for large datasets. Additionally, the resulting DataFrame 
+											can be easily manipulated using other pandas functions), the community support associated with pandas (being a core functionality 
+											of pandas, the read_csv function benefits from the extensive community support and regular updates), and its integration with Data 
+											Analysis Workflow (as part of the pandas library, read_csv seamlessly integrates with other pandas functions, allowing for a 
+											smooth and cohesive data analysis workflow). <i>Numpy</i>: I used the NumPy (or Numerical Python) library for its effiency (it is highly
+											optimised for numerical operations and is much faster than equivalent operations performed using native Python lists), its ease of use (the
+											NumPy syntax is clean and intuitive. This makes it easy to express complex amthmatical operations concisely), its wide adoption (NumPy is widely
+											adopted in the scientific and engineering communities, which means there is extensive community support, resources, and a large ecosystem of 
+											compatible libraries), and its interoperability (NumPy arrays can be seamlessly integrated with other libraries and tools in the Python ecosystem,
+											 fostering interoperatability and code reusability). <i>train_test_split</i> and <i>LinearRegression</i>
 										from <i>sklearn.model_selection</i> for splitting the data and creating a linear regression model, and <i>plotly.express</i>
 										and <i>plotly.graph_objects</i> for creating interactive visualisations. </p>
 										</section>
@@ -97,7 +110,7 @@ import plotly.graph_objects as go</pre></span></p>
 										<p><span class="image right"><pre>
 data = pd.read_csv("C:/Users/Caedmon/Documents/Learning_Python/Coffee_export.csv")</pre></span></p>
 										<p>The next section is where the code reads a CSV file, in this example 'Coffee_exports.csv' using the <i>pd.read_csv</i>
-											function and stores it in the <i>data</i> DataFrame.
+											function and stores it in the <i>data</i> DataFrame. 
 										</p>
 										</section>
 										
@@ -138,7 +151,8 @@ model.fit(x, y)</pre></span></p>
 										<p><span class="image left"><pre>
 x_range = np.linspace(x.min(), x.max(), 1000)</pre></span></p>
 										<p><i>x_range</i> is created as a range of values between the <i>min</i> and <i>max</i> values
-											of the original "1990" column.</p>
+											of the original "1990" column. <i>np.linspace</i> in this scenario is used to generate x-axis values
+											for plotting functions, ensuring a smooth and evenly distributed set of points.</p>
 										</section>
 
 										<section>

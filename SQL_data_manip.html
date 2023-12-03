@@ -41,8 +41,23 @@
 						<header>
 							<div class="inner">
 								<h2>SQL Database Management and Data Manipulation</h2>
-								<p>Through this showcase I will demonstrate my SQL abilities to create and maintain a Microsoft SQL Server, a private database, 
-                                and my ability to manipulate and analyse data for a specific set of tasks. I will then illustrate the data using Tableau.
+								<p>There are multiple instances of code through this showcase. Each iteration of the code will be broken down and digested. To start
+									I used SQL Server 2022 to create a database on my device. Secondly, I installed SQL Server Management Studio to access the database
+									and manipulate the data. The dataset used is COVID-19 data obtained from <a href="https://ourworldindata.org/coronavirus">
+										https://ourworldindata.org/coronavirus</a>. This dataset was then imported onto my database in two digestable tables, <i>CovidDeaths</i> 
+										and <i>Covid Vaccinations</i>.
 								</p>
 							</div>
 						</header>
+
+						<!-- Content -->
+						<div class="wrapper">
+							<div class="inner">
+								<section>
+									<h3>Initial Overarching Data Check</h3>
+									<p><span class="image right"><pre>
+SELECT *
+FROM PortfolioProject..CovidDeaths
+ORDER BY 3,4</pre></span></p>
+								</section>
+

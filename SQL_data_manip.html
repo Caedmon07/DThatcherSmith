@@ -59,5 +59,37 @@
 SELECT *
 FROM PortfolioProject..CovidDeaths
 ORDER BY 3,4</pre></span></p>
+								<p>For the first step in this code I had to select all columns from the 'CovidDeaths' table, and re-order the 
+									columns to have the country in the first column. I will explain each step of the code below:</p>
+								<p><i>SELECT *</i>: This part of the code is specifying the columns to be retrieved in the result set. The 
+									asterisk (*) is a wildcard character that represents all columns. So, the query is selecting all columns
+									 from the "CovidDeaths" table.</p>
+								<p><i>FROM portfolioProject...CovidDeaths</i>: This part of the code specifies the source of the data. It indicates that the data is retrieved 
+									from the "CovidDeaths" table, which is located in the "PortfolioProject" schema. The ".." notation is used to separate 
+									the schema and table names.</p>
+								<p><i>ORDER BY 3,4</i>: This part of the code is used to sort the result set. The numbers 3 and 4 refer to the positions of columns 
+									in the result set (based on the order in which they appear in the SELECT statement). In SQL, the ORDER BY clause is used to sort the 
+									result set based on one or more columns. In this case, the result set will be sorted primarily by the third column and then by the 
+									fourth column.</p>
+
 								</section>
+
+								<section>
+									<h3>Checking data more granularly</h3>
+									<p><span class="image right"><pre>
+SELECT location, date, population, total_cases, new_cases
+FROM PortfolioProject..CovidDeaths
+ORDER BY 1,2</pre></span></p>
+								<p>The second step is investigating the data more granularly by investigating specific columns. Note the only difference
+									in this code is the addition of specific column names and the ordering of the columns from 3,4 to 1,2.</p>
+								</section>
+
+								<section>
+									<h3>Manipulate the data to show the percentage of deaths for the UK</h3>
+									<p><span class="image right"><pre>
+SELECT location, date, population, total_deaths, (total_deaths/population)*100 AS DeathPercentage
+FROM PortfolioProject..CovidDeaths
+WHERE location like '%kingdom%'
+ORDER BY 1,2</pre></span></p>
+								<p></p>
 

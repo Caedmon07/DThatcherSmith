@@ -45,7 +45,10 @@
 									I used SQL Server 2022 to create a database on my device. Secondly, I installed SQL Server Management Studio to access the database
 									and manipulate the data. The dataset used is COVID-19 data obtained from <a href="https://ourworldindata.org/coronavirus">
 										https://ourworldindata.org/coronavirus</a>. This dataset was then imported onto my database in two digestable tables, <i>CovidDeaths</i> 
-										and <i>Covid Vaccinations</i>.
+										and <i>Covid Vaccinations</i>. Once I had manipulated the data I created a Tableau dashboard, found here: <a href="https://public.tableau.com/app/profile/daniel.thatcher.smith/viz/COVIDProject_17015548313140/Dashboard1">
+										My Tableau Dashboard</a>. I will not go into detail about how I did the dashboard creation and this is relativley self-explanatory.
+
+
 								</p>
 							</div>
 						</header>
@@ -71,9 +74,12 @@ ORDER BY 3,4</pre></span></p>
 									in the result set (based on the order in which they appear in the SELECT statement). In SQL, the ORDER BY clause is used to sort the 
 									result set based on one or more columns. In this case, the result set will be sorted primarily by the third column and then by the 
 									fourth column.</p>
+								<p>Once the code is run, the following output is given (this is a smal glimpse of the data):</p>
+									<span class="image centre"><img src="images/Output1.png" height="250px" width="950px" alt="" /></span>
+								
 
 								</section>
-
+<br>
 								<section>
 									<h3>Checking data more granularly</h3>
 									<p><span class="image right"><pre>
@@ -82,8 +88,10 @@ FROM PortfolioProject..CovidDeaths
 ORDER BY 1,2</pre></span></p>
 								<p>The second step is investigating the data more granularly by investigating specific columns. Note the only difference
 									in this code is the addition of specific column names and the ordering of the columns from 3,4 to 1,2.</p>
+								<p>Once run the following data is given:</p>
+								<span class="image centre"><img src="images/Output2.png" height="250px" width="300px" alt="" /></span>
 								</section>
-
+<br>
 								<section>
 									<h3>Manipulate the data to show the percentage of deaths for the UK</h3>
 									<p><span class="image right"><pre>
@@ -91,5 +99,132 @@ SELECT location, date, population, total_deaths, (total_deaths/population)*100 A
 FROM PortfolioProject..CovidDeaths
 WHERE location like '%kingdom%'
 ORDER BY 1,2</pre></span></p>
-								<p></p>
+								<p><i>SELECT location, date, population, total_deaths, (total_deaths/population)*100 AS DeathPercentage</i>: For the first part of this code we first select the relevant columns, as we did above. However, the difference
+									in this code is that we are creating a new column based off of the calculations of other columns. For example, above
+									we are dividing the <i>total_deaths</i> column by the <i>population</i> column and outputting that data into a new column
+									<i>DeathPercentage</i>. Note, this does not permenantly create a new column, but rather allows us to view data calculations
+									quickly without altering the table.
+								</p>
+								<p><i>FROM PortfolioProject..CovidDeaths</i>: Same as above code examples, chosing which table the data needs to come from.</p>
+								<p><i>WHERE location like '%kingdom%'</i>: In the previous coded examples we have been investigating all data. However,
+								for this example we are only concerned with data from the United Kingdom. The WHERE clause allows us to investigate data in a 
+								specific column and give us the output for all columns we have selected above. The LIKE clause in this part of the code allows 
+								us to air on the side of caution and capture anything in the <i>location</i> column and give us that output.</p>
+								<p><i>ORDER BY 1,2</i>: As in the above codes, this allows us to order the data. In this instance I have ordered by <i>location</i>,
+								<i>date</i>, etc.</p>
+								<p>Running the above code gives us this output (I have scrolled down further in the table as when there were no deaths, the percentage was NULL):</p>
+								<span class="image centre"><img src="images/Output3.png" height="250px" width="350px" alt="" /></span>
+								</section>
+<br>
+								<section>
+								<h3>Manipulate the data to show the percentage of the population who got COVID</h3>
+								<p><span class="image right"><pre>
+
+SELECT location, date, population, total_cases, (total_cases/population)*100 AS InfectionPercentage
+FROM PortfolioProject..CovidDeaths
+WHERE location like '%kingdom%'
+ORDER BY 1,2</pre></span></p>
+								<p>This code is very similar to the one above. It does however give us the percentage of the population that were
+									infected with COVID, through the timeline by dividing the <i>total_cases</i> column by the <i>population</i> column
+									and giving us an output in the <i>InfectionPercentage</i> column.
+								</p>
+								<p>Output should be like below:</p>
+								<span class="image centre"><img src="images/Output4.png" height="250px" width="350px" alt="" /></span>
+								</section>
+<br>
+								<section>
+									<h3>Manipulate data to show highest infection rate per country compared to population, using 'ORDER' to show highest across the globe</h3>
+									<p><span class="image right"><pre>
+
+SELECT location, population, MAX(total_cases) AS HighestInfectionNumber, MAX((total_cases/population))*100 AS InfectionPercentage
+FROM PortfolioProject..CovidDeaths
+GROUP BY location, population
+ORDER BY InfectionPercentage DESC</pre></span></p>
+								<p><i>SELECT location, population, MAX(total_cases) AS HighestInfectionNumber, MAX((total_cases/population))*100 AS InfectionPercentage</i>: 
+								As with all the above codes, we have selected out columns. However, this time we want to investigate the highest number in the <i>total_cases</i> field 
+							and save the output as <i>HighestInfectionNumber</i>. We then want to find the maximum value of division of the <i>total_cases</i> column and the 
+							<i>population column</i> to save to our <i>InfectionPercentage</i> column.</p>
+							<p><i>GROUP BY location, population</i>: I have skipped the FROM clause as I have explained numerous times above but will jump straight in to the GROUP BY clause.
+							This clause groups the result set by the location and population columns. The MAX() aggregate functions in the SELECT clause operate on each group of 
+							rows based on these columns.</p>
+							<p><i>ORDER BY InfectionPercentage DESC</i>: Finally, we want to ORDER our columns. This time though we want to order our columns according to the value
+							of the <i>InfectionPercentage</i> column, in descending order. This will allow us to view the countries with the highest percentage of infections.</p>
+							<p>Output of the code should be as below:</p>
+							<span class="image centre"><img src="images/Output5.png" height="250px" width="350px" alt="" /></span>
+							</section>
+<br>
+							<section>
+							<h3>Creating a CTE to join the two tables and look at total population who have been vaccinated whilst creating a rolling tally and outputting that as a percentage</h3>
+							<p><span class="image right"><pre>
+
+WITH PopulationOverVaccinations (continent, location, date, population, new_vaccinations, Rolling_Total_Vaccinations)
+AS
+(
+SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY 
+dea.location, dea.DATE) AS Rolling_Total_Vaccinations
+FROM PortfolioProject..CovidDeaths dea
+JOIN PortfolioProject..CovidVaccinations vac
+	on CAST(dea.location AS nvarchar) = CAST(vac.location AS nvarchar)
+	AND dea.date = vac.date
+WHERE dea.continent IS NOT NULL
+)
+
+SELECT *, (Rolling_Total_Vaccinations/population)*100
+FROM PopulationOverVaccinations
+WHERE new_vaccinations IS NOT NULL
+ORDER BY 1,2,3</pre></span></p>
+								
+								<p>This is by far the most complicated part of this showcase. In the above code the SQL query creates a Common 
+								Table Expression (<i>PopulationOverVaccinations</i>) that combines data from the "CovidDeaths" and "CovidVaccinations" 
+								tables. It calculates the rolling total of vaccinations for each location and then calculates the vaccination percentage.
+								The final result set includes all columns from the CTE, along with the calculated vaccination percentage. </p>
+								<p>This section begins with a Common Table Expression (CTE) defined by the WITH keyword. The CTE is named PopulationOverVaccinations
+								and has columns <i>continent</i>, <i>location</i>, <i>date</i>, <i>population</i>, <i>new_vaccinations</i>, and <i>Rolling_Total_Vaccinations</i>.</p>
+								<p>The CTE is created by selecting data from two tables: "CovidDeaths" (dea) and "CovidVaccinations" (vac). The 
+								join condition involves matching the location and date columns.</p>
+								<p>The SUM(vac.new_vaccinations) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.DATE) expression 
+									calculates the rolling total of new vaccinations for each location. It uses the SUM window function over the partition defined 
+									by dea.location and is ordered by dea.location and dea.DATE.</p>
+								<p>The WHERE clause filters out records where the continent in the "CovidDeaths" table is NULL.</p>
+								<p>The SELECT and FROM clauses at the bottom selects all columns from the <i>PopulationOverVaccinations</i> CTE (* denotes 
+									all columns) and adds a calculated column: (<i>Rolling_Total_Vaccinations</i>/<i>population</i>)*100. This column represents the 
+									vaccination percentage.</p>
+								<p>Finally, as there was a lot of NULL data (i.e. people were not vaccinated yet), I added in a WHERE <i>new_vaccinations IS NOT NULL.
+									This will then only show data where there are values. Also, we would like to ORDER BY <i>continet</i>, <i>location</i>, and then <i>date</i>.
+								</i></p>
+								<p>Once run, the below output should be given:</p>
+								<span class="image centre"><img src="images/Output6.png" height="500px" width="750px" alt="" /></span>
+							</section>
+						</div>
+				</div>
+
+		</section>
+
+		<!-- Footer -->
+		<section id="footer">
+			<div class="inner">
+				<h2 class="major">Get in touch</h2>
+				<p>If you are interested in my skillset and wish to get in touch, please find my details below</p>
+				<ul class="contact">
+					<li class="icon solid fa-phone">(+44) 7727899527</li>
+					<li class="icon solid fa-envelope"><a href="#">danielsmith77@btinternet.com</a></li>
+					<li class="icon brands fa-linkedin"><a href="https://www.linkedin.com/in/daniel-thatcher-smith-a9470b159">LinkedIn</a></li>
+					<li class="icon brands fa-facebook-f"><a href="https://www.facebook.com/profile.php?id=1460064952">Facebook</a></li>
+					<li class="icon business fa-file-alt"><a href="CV.docx">CV</a></li>
+				</ul>
+			</div>
+		</section>
+
+</div>
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/browser.min.js"></script>
+<script src="assets/js/breakpoints.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/main.js"></script>
+
+</body>
+</html>
 

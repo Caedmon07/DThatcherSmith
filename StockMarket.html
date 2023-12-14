@@ -43,7 +43,9 @@
 								<h2>Stockmarket Analysis for Multiple Stocks Using Python</h2>
 								<p>On this page I will showcase my Python skills to investigate and manipulate data, specifically four stocks:
                                     Amazon (AMZN), Microsoft (MSFT), Google (GOOG), and Apple (AAPL), for a period of a year. I will also create
-                                    three visualisations of the data, in the form of a candlestick graph, bar plot, and a line graph.
+                                    three visualisations of the data, in the form of a candlestick graph, bar plot, and a line graph. I have decided
+                                    to break the explanation up into four parts. Firstly, explaining the creation of the dataframe, secondly, creating
+                                    the candlestick graph, thirdly, creating the bar plot, and lastly, creating the line graph.
 								</p>
 							</div>
 						</header>
@@ -163,7 +165,191 @@ for ticker, df in dfs.items():
     figure3.show()</pre></span></p>
 									</section>
 									
-                                    <section></section>
+                                    <section>
+                                    <h3>Creating the dataframe</h3>
+										<p><span class="image right"><pre>
+import numpy as np
+import yfinance as yf
+import pandas as pd
+from datetime import date, timedelta
+import plotly.graph_objects as go
+import plotly.express as px
+                                           
+today = date.today()
+end_date = today.strftime("%Y-%m-%d")
+start_date = (today - timedelta(days=365)).strftime("%Y-%m-%d")
+                                     
+stock_colors={'AAPL': 'green', 'GOOG': 'blue', 'MSFT': 'orange', 'AMZN': 'red'}
+                                            
+dfs = {}
+for ticker, color in stock_colors.items():
+    data = yf.download(ticker, start=start_date, end=end_date, progress=False).reset_index()
+    data["Ticker"] = ticker
+    data["Colour"] = color
+    dfs[ticker] = data
+                                            
+data=pd.concat(list(dfs.values()), ignore_index=True)</pre></span></p>
+                                        <p>Firstly, we import the necessary Libraries. <i>numpy</i> is imported as <i>np</i>, <i>yfinance</i> is imported as <i>yf</i>,
+                                        <i>pandas</i> is imported as <i>pd</i>, <i>date</i> and <i>timedelta</i> classes are imported from the <i>datetime</i> module, 
+                                        <i>plotly.graph_objects</i> is imported as <i>go</i>, and <i>plotly.express</i> is imported as <i>px</i>.</p>
+                                        <p>We then need to set up the date. Today is set to the current date by using <i>today = date.today()</i>, the <i>end_date</i>
+                                        is set to the formatted string of today's date, and the <i>start_date</i> is set to the formatted string of the date one 
+                                        year ago from today.</p>
+                                        <p>A dictionary <i>stock_colors</i> is defined to associate stock tickers with color codes.</p>
+                                        <p>A loop downloads historical stock data using <i>yfinance</i> for each stock in <i>stock_colors</i>. The downloaded 
+                                        data is added to the dfs dictionary, indexed by stock ticker.</p>
+                                        <p>We then concatenate all the DataFrames in dfs into a single DataFrame called <i>data</i>.</p>
+                                        </section>
+
+                                        <section>
+                                        <h3>Creating the candlestick graph</h3>
+                                        <p><span class="image right"><pre>
+figure = go.Figure()                                    
+for ticker in stock_colors.keys():
+    subset = data[data['Ticker'] == ticker]
+    color = stock_colors[ticker]
+    figure.add_trace(go.Candlestick(x=subset['Date'],
+                                    open=subset['Open'],
+                                    high=subset['High'],
+                                    low=subset['Low'],
+                                    close=subset['Close'],
+                                    increasing_line_color=color,
+                                    decreasing_line_color=color,
+                                    text=subset['Ticker'] + '<br>Open: ' + subset['Open'].astype(str) + 
+                                                '<br>Close: ' + subset['Close'].astype(str) + 
+                                                '<br>High: ' + subset['High'].astype(str) + 
+                                                '<br>Low: ' + subset['Low'].astype(str), 
+                                                hoverinfo='text', 
+                                                name=ticker))  
+                                                                                                                            
+    figure.update_layout(title = "Muliple Stock Price Analysis")
+    figure.update_xaxes(title_text='Date')
+    figure.update_yaxes(title_text='Stock Price (USD)')</pre></span></p>
+                                            <p>Firstly, we initiate the figure using <i>figure = go.Figure()</i>. This line creates 
+                                            a new Plotly figure object and assigns it to the variable figure. This figure will be used to 
+                                            plot the candlestick chart.</p>
+                                            <p>Next, we loop through the stock Tickers using <i>for ticker in stock_colors.keys():</i>. 
+                                            The code starts a loop that iterates through each stock ticker in the <i>stock_colors</i> dictionary.</p>
+                                            <p>Then, for each stock ticker, it creates a subset of the data (data) using <i>subset = data[data['Ticker'] == ticker]</i>
+                                             containing only the rows corresponding to that specific ticker.</p>
+                                            <p>We then retrieve the color associated with the current stock ticker from the stock_colors dictionary
+                                            using <i>color = stock_colors[ticker]</i>.</p>
+                                            <p>We then add a candlestick trace to the figure for the current stock ticker. The <i>x</i>, <i>open</i>, 
+                                            <i>high</i>, <i>low</i>, and <i>close</i> parameters define the data for the candlestick chart. 
+                                            <i>increasing_line_color</i> and <i>decreasing_line_color</i> set the colours for increasing and decreasing 
+                                            candlesticks. <i>text</i> provides additional information for each candlestick for hover interaction and <i>name</i>
+                                            is set to the current ticker for labeling.</p>
+                                            <p>Finally, we update the layout and axes of the figure. Using <i>figure.update_layout(title = "Muliple Stock Price Analysis")</i>,
+                                            to set the title of the figure to "Muliple Stock Price Analysis" and using <i>figure.update_xaxes(title_text='Date')</i> and
+                                            <i>figure.update_yaxes(title_text='Stock Price (USD)')</i> to set the x-axis title to 'Date' and the y-axis title to 'Stock Price (USD)'.</p>
+                                        </section>
+
+                                        <section>
+                                        <h3>Creating the bar plot</h3>
+                                        <p><span class="image right"><pre> 
+figure2 = go.Figure()
+for ticker in stock_colors.keys():
+    subset = data[data['Ticker'] == ticker]
+    color = stock_colors[ticker]
+    figure2.add_trace(go.Bar(x=subset['Date'], 
+                            y=subset['Close'], 
+                            marker_color=color,
+                            text=subset['Ticker'] + '<br>Close: ' + subset['Close'].astype(str),
+                            hoverinfo='text',
+                            name=ticker))
+    figure2.update_layout(title = "Muliple Stock Price Analysis (Bar Plot)")
+    figure2.update_xaxes(title_text='Date')
+    figure2.update_yaxes(title_text='Closing Price (USD)')</pre></span></p>
+                                            <p>Much of the above code has been explained already. Firstly, we create a new figure (figure2) this time.
+                                            We loop through the stock tickers, create a subset of the data, and retrieve the colour associated with that
+                                            ticker. However, now we want a bar plot, the code changes slightly.</p>
+                                            <p> We add a bar plot trace to the figure for the current stock ticker. The <i>x</i> and <i>y</i> parameters define the data 
+                                            for the bar chart, the <i>marker_color</i> sets the color of the bars, <i>text</i> provides additional information for
+                                            each bar for hover interaction, <i>hoverinfo</i> specifies that the hover text includes the information provided in the
+                                            text parameter, and <i>name</i> is set to the current ticker for labeling. Finally, we again update the
+                                        titles.</p>
+                                        </section>
+
+                                        <section>
+                                            <h3>Creating the line graph</h3>
+                                            <p><span class="image right"><pre>
+figure3=go.Figure()
+for ticker, df in dfs.items():
+    color = stock_colors[ticker]
+    figure3.add_trace(go.Scatter(x=df['Date'],
+                             y=df['Close'],
+                             mode='lines',
+                             line=dict(color=color),
+                             text=df['Ticker'] + '<br>Close: ' + data['Close'].astype(str), 
+                             hoverinfo='text', 
+                             name=ticker))  
+
+figure3.update_xaxes(title_text='Date')
+figure3.update_yaxes(title_text="Close Price (USD)")
+figure3.update_layout(title_text='Stock Prices Line Graph')
+
+date_ranges = {
+    '1 Month': 30,
+    '3 Months': 90,
+    '6 Months': 180,
+    '1 Year': 365
+}
+
+updatemenus =[]
+
+for stock in stock_colors.keys():
+    buttons = []
+    for label, days in date_ranges.items():
+        button = dict(label=label,
+                      method='relayout',
+                      args=[{'xaxis': {'range': [today - timedelta(days=days), today]}}])
+        buttons.append(button)
+
+updatemenus.append(dict(type='buttons',
+                        showactive=True,
+                        buttons=buttons,
+                        x=0.1,
+                        xanchor='left',
+                        y=1.15,
+                        yanchor='top'))
+figure3.update_layout(updatemenus=updatemenus)</pre></span></p>
+                                        <p>As with the bar plot, a lot of the creation of the graph is the same. we create a new figure (figure3) this time.
+                                        We loop through the stock tickers, create a subset of the data, and retrieve the colour associated with that
+                                        ticker. However, there is a step added in. We use <i>for ticker, df in dfs.items():</i> to start a loop
+                                        that iterates through each key-value pair in the dfs dictionary, where the key is a stock ticker and the 
+                                        value is a DataFrame (df) containing historical data for that stock.</p>
+                                        <p> We add a line plot trace to the figure for the current stock ticker.The <i>x</i> and <i>y</i> parameters
+                                        define the data for the line chart, <i>mode='lines'</i> specifies that the trace represents a line chart, 
+                                        <i>line=dict(color=color)</i> sets the color of the line, <i>text</i> provides additional information for 
+                                        each point on the line for hover interaction, <i>hoverinfo</i> specifies that the hover text includes the 
+                                        information provided in the text parameter, and <i>name</i> is set to the current ticker for labeling. Finally,
+                                    we again update our titles.</p>
+                                        <p>Next for the line graph, I decided to make it more intereactive by inputting a drop down bar to give people
+                                        the option to view specific time periods. I.e. the last month, 3 months, 6 months, or year.</p>
+                                        <p>To start I defined a dictionary <i>date_ranges</i> with different time ranges. I then started to create the buttons.
+                                        i Initialized and empty list <i>updatemenus</i> to store the dropdown menu. I then created a nested loop to generate 
+                                        buttons for each date range for each stock. Each button is a dictionary with label, method, and arguments for 
+                                        updating the x-axis range.</p>
+                                        <p>We then append a dictionary representing the dropdown menu to the updatemenus list. The dropdown menu 
+                                        includes buttons for different date ranges.</p>
+                                        <p>Finally, we update the layout of the figure to include the defined dropdown menu.</p>
+
+                                        </section>
+
+                                        <section>
+                                            <h3>Initialising the graphs</h3>
+                                            <p><span class="image right"><pre>
+figure.show()
+figure2.show()
+figure3.show()</pre></span></p>
+                                        <p>The last thing to do is to display the three Plotly figures (Candlestick Graph (<i>figure</i>), 
+                                        Bar Plot (<i>figure2</i>), and Line Graph <i>figure3</i>).</p>
+                                        <p>When run, the code should give us the below three outputs:</p>
+                                        <span class="image centre"><img src="images/Stock_Output1.png" height="550px" width="1000px" alt="" /></span>
+                                        <span class="image centre"><img src="images/Stock_Output2.png" height="550px" width="1000x" alt="" /></span>
+                                        <span class="image centre"><img src="images/Stock_Output3.png" height="550px" width="1000px" alt="" /></span>
+
+                                        </section>
 
 
 					<!-- Footer -->

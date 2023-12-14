@@ -59,6 +59,7 @@ for ticker in stock_colors.keys():
     figure2.update_xaxes(title_text='Date')
     figure2.update_yaxes(title_text='Closing Price (USD)')
 
+#Creates a line graph
 figure3=go.Figure()
 for ticker, df in dfs.items():
     color = stock_colors[ticker]
@@ -91,13 +92,13 @@ for stock in stock_colors.keys():
                       args=[{'xaxis': {'range': [today - timedelta(days=days), today]}}])
         buttons.append(button)
 
-        updatemenus.append(dict(type='buttons',
-                                showactive=True,
-                                buttons=buttons,
-                                x=0.1,
-                                xanchor='left',
-                                y=1.15,
-                                yanchor='top'))
+updatemenus.append(dict(type='buttons',
+                        showactive=True,
+                        buttons=buttons,
+                        x=0.1,
+                        xanchor='left',
+                        y=1.15,
+                        yanchor='top'))
 figure3.update_layout(updatemenus=updatemenus)
 
 figure.show()

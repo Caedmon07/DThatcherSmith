@@ -7,18 +7,22 @@ from datetime import date, timedelta
 import plotly.graph_objects as go
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
-from keras.layers import Dense, LSTM
-import tkinter as tk
-from tkinter import ttk
-import os
+from keras.layers import Dense, LSTM, Activation
 from sklearn.preprocessing import MinMaxScaler
 from sqlalchemy import create_engine
 import pyodbc
 import tkinter.simpledialog
+import time
+
+
+symbols = ['AAPL', 'GOOG', 'MSFT']
+start_date = '2020-01-01'
+end_date = date.today()
+num_days = 365
 
 def get_sql_credentials():
-    username = tkinter.simpledialog.askstring("Login", "Enter your SQL Server username:")
-    password = tkinter.simpledialog.askstring("Login", "Enter your SQL Server password:", show='*')
+    username = input("Enter your SQL Server username:")
+    password = tkinter.simpledialog.askstring("Login","Enter your SQL Server password:", show='*')
     return username, password
 
 # Update your SQL Server connection details
@@ -26,175 +30,154 @@ server = 'LAPTOP-B5J6KRT7'
 database = 'PortfolioProject'
 
 # Function to download or load stock data
-def download_stock_data(symbol, start_date, end_date):
-    data_filename = f"{symbol}_stock_data.csv"
+def download_stock_data(symbols, start_date, end_date):
+    # Get SQL Server credentials from the user
+    username, password = get_sql_credentials()
+    
+    all_data = []
 
-    if os.path.exists(data_filename):
-        # Load data from file
-        data = pd.read_csv(data_filename, parse_dates=['Date'], index_col='Date', date_parser=lambda x: pd.to_datetime(x, format='%Y-%m-%d'))
-        print("Loaded data from file:")
-        print(data)
-    else:
-        # Get SQL Server credentials from the user
-        username, password = get_sql_credentials()
-
-        # Download data
+    for symbol in symbols:
         data = yf.download(symbol, start=start_date, end=end_date, progress=False).reset_index()
-        print("Downloaded data from yfinance:")
+        print(f"Downloaded data for {symbol} from yfinance:")
         print(data)
 
         # Save data to SQL Server
         engine = create_engine(f"mssql+pyodbc://{username}:{password}@{server}/{database}?driver=ODBC+Driver+17+for+SQL+Server")
         data.to_sql(name=symbol, con=engine, if_exists='replace', index=False)
+        
+        all_data.append(data)
 
-        # Save data to file for future use
-        data.to_csv(data_filename, index=False, date_format="%Y-%m-%d", columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
-        print("Saved data to file.")
+    return all_data
 
-    return data
+def predict_stock(all_stock_data, num_days):
+    all_future_predictions = []
 
-def predict_stock(data, num_days, epochs_label):
-    print("Loaded data: ")
-    print(data)
+    for data in all_stock_data:
+        print("Loaded data:")
+        print(data)
 
-    x = data[["Open", "High", "Low", "Volume"]]
-    y = data["Close"]
-    
-    # Normalize input features and target variable
-    scaler_x = MinMaxScaler()
-    scaler_y = MinMaxScaler()
+        x = data[["Open", "High", "Low", "Volume"]]
+        y = data["Close"]
 
-    x = scaler_x.fit_transform(x)
-    y = scaler_y.fit_transform(y.values.reshape(-1, 1))
+        # Normalize input features and target variable
+        scaler_x = MinMaxScaler()
+        scaler_y = MinMaxScaler()
 
-    xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.2, random_state=42)
+        x = scaler_x.fit_transform(x)
+        y = scaler_y.fit_transform(y.values.reshape(-1, 1))
 
-    model = Sequential()
-    model.add(LSTM(128, return_sequences=True, input_shape=(xtrain.shape[1], 1)))
-    model.add(LSTM(64, return_sequences=False))
-    model.add(Dense(500))
-    model.add(Dense(250))
-    model.add(Dense(100))
-    model.add(Dense(50))
-    model.add(Dense(10))
-    model.add(Dense(5))
-    model.add(Dense(1))
-    model.compile(optimizer='adam', loss='mean_squared_error')
+        xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size=0.2, random_state=42)
 
-    # Set up a callback to capture the number of epochs
-    class EpochCallback(tf.keras.callbacks.Callback):
-        def on_epoch_end(self, epoch, logs=None):
-            epochs_label.config(text=f"Epochs: {epoch + 1}")
+        model = Sequential()
+        model.add(LSTM(128, return_sequences=True, input_shape=(xtrain.shape[1], 1)))
+        model.add(Activation('relu'))
+        model.add(LSTM(64, return_sequences=False))
+        model.add(Activation('relu'))
+        model.add(Dense(1000))
+        model.add(Activation('relu'))
+        model.add(Dense(750))
+        model.add(Activation('relu'))
+        model.add(Dense(500))
+        model.add(Activation('relu'))
+        model.add(Dense(300))
+        model.add(Activation('relu'))
+        model.add(Dense(250))
+        model.add(Activation('relu'))
+        model.compile(optimizer='adam', loss='mean_squared_error')
 
-    callback = EpochCallback()
+        model.fit(xtrain.reshape((xtrain.shape[0], xtrain.shape[1], 1)), ytrain, batch_size=1, epochs=1)
 
-    model.fit(xtrain, ytrain, batch_size=1, epochs=num_days, callbacks=[callback])
+        predictions = model.predict(xtest.reshape((xtest.shape[0], xtest.shape[1], 1)))
 
-    # Predicting on the test set
-    predictions = model.predict(xtest)
+        # Predicting future stock prices
+        last_data_point = data.tail(1)[["Open", "High", "Low", "Volume"]].values.reshape(1, -1)
+        last_data_point = scaler_x.transform(last_data_point)
 
-    # Predicting future stock prices
-    last_data_point = data.tail(1)[["Open", "High", "Low", "Volume"]].values.reshape(1, -1)
-    last_data_point = scaler_x.transform(last_data_point)
-    future_predictions = []
+        future_predictions = []
 
-    for _ in range(num_days):
-        future_prediction = model.predict(last_data_point)
-        future_predictions.append(future_prediction[0][0])
-        last_data_point = last_data_point[:, 1:]
-        last_data_point = np.append(last_data_point, future_prediction[0][0].reshape(1, -1), axis=1)
+        for _ in range(num_days):
+            future_prediction = model.predict(last_data_point.reshape(1, last_data_point.shape[1], 1))
+            future_predictions.append(future_prediction[0][0])
 
-    # Inverse transform the predictions to the original scale
-    future_predictions = scaler_y.inverse_transform(np.array(future_predictions).reshape(-1, 1))[0]
+            # Update the last data point for the next iteration
+            last_data_point = np.append(last_data_point[:, 1:], future_prediction[0][0].reshape(1, -1), axis=1)
 
-    return predictions, future_predictions
+        # Inverse transform the predictions to the original scale
+        future_predictions = scaler_y.inverse_transform(np.array(future_predictions).reshape(-1, 1))
 
-def plot_candlestick_chart(data, future_data):
+        print("Predictions:")
+        print(predictions)
+        print("Future Predictions:")
+        print(future_predictions)
+
+        all_future_predictions.append(future_predictions)
+
+    return np.squeeze(all_future_predictions)
+
+# Modify the plot_candlestick_chart function to handle a 1D array directly
+def plot_candlestick_chart(all_data, future_predictions, symbols, num_days):
     figure = go.Figure()
 
-    # Plot historical data
-    figure.add_trace(go.Candlestick(x=data["Date"],
-                                    open=data["Open"],
-                                    high=data["High"],
-                                    low=data["Low"],
-                                    close=data["Close"],
-                                    name='Historical Data'))
+    for i, stock_data in enumerate(all_data):
+        symbol = symbols[i]
+        individual_future_predictions = future_predictions[i]
 
-    # Plot future predictions
-    last_close_price = data["Close"].iloc[-1]
-    future_dates = [pd.to_datetime(data.index[-1]) + timedelta(days=i) for i in range(1, len(future_data) + 1)]
-    future_open_values = [last_close_price] + [last_close_price + sum(future_data[:i]) for i in range(1, len(future_data))]
-    future_close_values = [last_close_price + sum(future_data[:i]) for i in range(1, len(future_data) + 1)]
-    future_high_values = [max(last_close_price, last_close_price + val) for val in future_data]
-    future_low_values = [min(last_close_price, last_close_price + val) for val in future_data]
+        # Plot historical data
+        figure.add_trace(go.Candlestick(x=stock_data["Date"],
+                                        open=stock_data["Open"].astype(float),
+                                        high=stock_data["High"].astype(float),
+                                        low=stock_data["Low"].astype(float),
+                                        close=stock_data["Close"].astype(float),
+                                        name=f'Historical Data - {symbol}',
+                                        increasing_line_color='green', decreasing_line_color='red'))
 
-    figure.add_trace(go.Candlestick(x=future_dates,
-                                    open=future_open_values,
-                                    high=future_high_values,
-                                    low=future_low_values,
-                                    close=future_close_values,
-                                    name='Future Predictions'))
+        # Plot future predictions
+        last_date = stock_data["Date"].iloc[-1]
+        future_dates = [last_date + timedelta(days=j) for j in range(1, num_days + 1)]
 
-    figure.update_layout(title="Stock Price Analysis with Predictions", xaxis_rangeslider_visible=False)
+        future_close_values = individual_future_predictions
+        future_open_values = future_close_values[:-1]
+        future_high_values = [max(float(last_close), float(future_close)) for last_close, future_close in
+                            zip(future_close_values[:-1], future_close_values)]
+        future_low_values = [min(float(last_close), float(future_close)) for last_close, future_close in
+                            zip(future_close_values[:-1], future_close_values)]
+
+        figure.add_trace(go.Candlestick(x=future_dates,
+                                        open=future_open_values,
+                                        high=future_high_values,
+                                        low=future_low_values,
+                                        close=future_close_values,
+                                        name=f'Future Predictions - {symbol}',
+                                        increasing_line_color='blue', decreasing_line_color='orange'))
+
+    figure.update_layout(title=f"Stock Price Analysis with Predictions", xaxis_rangeslider_visible=False)
     figure.show()
 
-def on_predict_button_click():
-    symbol = symbol_entry.get()
-    start_date = start_date_entry.get()
-    end_date = end_date_entry.get()
-    num_days = int(num_days_entry.get())
+def live_stock_feed(symbols, all_data, scaler_x, scaler_y, model, num_days):
+    while True:
+        for symbol, data in zip(symbols, all_data):
+            print(f"{symbol}")
+            print(data)
 
-    # Convert the start and end dates to the required format
-    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").strftime("%Y-%m-%d")
-    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").strftime("%Y-%m-%d")
+            x_live = data[["Open", "High", "Low", "Volume"]].values
+            x_live = scaler_x.transform(x_live.reshape(1, -1))
 
-    # Clear previous epoch information
-    epochs_label.config(text="")
+            x_live = x_live.reshape((1, x_live.shape[0], x_live.shape[1]))
 
-    data = download_stock_data(symbol, start_date, end_date)
+            prediction = model.predict(x_live)
 
-    # Displaying the first future prediction value as an example
-    result_label.config(text=f"Predicted Close Price (Future): ...")
+            predicted_close = scaler_y.inverse_transform(prediction.reshape(-1, 1))[0][0]
 
-    predictions, future_predictions = predict_stock(data, num_days, epochs_label)
-    plot_candlestick_chart(data, future_predictions)
+            print(f"Predicted Close for the next day: {predicted_close}")
 
-    # Displaying the first future prediction value as an example
-    result_label.config(text=f"Predicted Close Price (Future): {future_predictions[0]:.2f}")
+            time.sleep(30)
+            
+scaler_x = MinMaxScaler()
+scaler_y = MinMaxScaler()
+model = Sequential()
 
-# GUI setup
-root = tk.Tk()
-root.title("Stock Prediction App")
+all_data = download_stock_data(symbols, start_date, end_date)
+future_predictions = predict_stock(all_data, num_days)
+plot_candlestick_chart(all_data, future_predictions, symbols, num_days)
 
-# Input fields
-symbol_label = ttk.Label(root, text="Stock Symbol:")
-symbol_label.pack()
-symbol_entry = ttk.Entry(root)
-symbol_entry.pack()
-
-start_date_label = ttk.Label(root, text="Start Date (YYYY-MM-DD):")
-start_date_label.pack()
-start_date_entry = ttk.Entry(root)
-start_date_entry.pack()
-
-end_date_label = ttk.Label(root, text="End Date (YYYY-MM-DD):")
-end_date_label.pack()
-end_date_entry = ttk.Entry(root)
-end_date_entry.pack()
-
-num_days_label = ttk.Label(root, text="Number of Days to Predict:")
-num_days_label.pack()
-num_days_entry = ttk.Entry(root)
-num_days_entry.pack()
-
-epochs_label = ttk.Label(root, text="Epochs: ")
-epochs_label.pack()
-
-predict_button = ttk.Button(root, text="Predict", command=on_predict_button_click)
-predict_button.pack()
-
-# Result label
-result_label = ttk.Label(root, text="")
-result_label.pack()
-
-root.mainloop()
+live_stock_feed(symbols, all_data, scaler_x, scaler_y, model, num_days)
